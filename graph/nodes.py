@@ -2,7 +2,6 @@
 from graph.state import GraphState
 from graph.router import get_router_chain
 from graph.planner import get_planner_chain
-from graph.planner.validator import validate_plan
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,6 +85,47 @@ def planner_node(state: GraphState) -> GraphState:
         }
         state["step_log"].append({
             "node": "planner",
+            "error": str(e),
+            "success": False
+        })
+    
+    return state
+
+
+def retriever_node(state: GraphState) -> GraphState:
+    """Retrieve products from private RAG"""
+    
+    try:
+        from graph.retriever import retrieve_products
+        
+        plan = state["plan"]
+        query = state["query"]
+        
+        # Extract from plan
+        filters = plan.get("filters", {})
+        retrieval_fields = plan.get("retrieval_fields", [])
+        
+        # Retrieve
+        docs = retrieve_products(
+            query=query,
+            filters=filters,
+            retrieval_fields=retrieval_fields,
+            k=5
+        )
+        
+        state["retrieved_docs"] = docs
+        state["step_log"].append({
+            "node": "retriever",
+            "input": {"query": query, "filters": filters},
+            "output": {"num_docs": len(docs)},
+            "success": True
+        })
+        
+    except Exception as e:
+        logger.error(f"Retriever error: {e}", exc_info=True)
+        state["retrieved_docs"] = []
+        state["step_log"].append({
+            "node": "retriever",
             "error": str(e),
             "success": False
         })
