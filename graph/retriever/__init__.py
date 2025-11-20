@@ -4,7 +4,7 @@ Unified retriever interface
 Maintains backward compatibility with v1
 """
 
-from graph.retriever.rag import retrieve_from_rag, get_vector_store
+from graph.retriever.rag1 import retrieve_from_rag, get_vector_store
 from graph.retriever.web import retrieve_from_web
 from typing import List, Dict
 import logging
