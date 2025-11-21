@@ -162,6 +162,7 @@ def _safe_json_parse(text):
 # 5️⃣ Retrieval
 # ===============================
 def retrieve_from_rag(query: str, filters: Dict, k: int = 20) -> List[Dict]:
+    """Retrieve top-k documents from FAISS index with filter constraints"""
     vs = get_vector_store()
     df, index, model = vs["df"], vs["index"], vs["model"]
 
@@ -172,10 +173,14 @@ def retrieve_from_rag(query: str, filters: Dict, k: int = 20) -> List[Dict]:
     filtered = []
     for idx, score in zip(indices, scores):
         row = df.iloc[idx]
+
+        # ✅ Category filter
         if "category" in filters and pd.notna(row.get("category", None)):
             query_cat = str(filters["category"]).lower()
             if query_cat not in str(row["category"]).lower():
                 continue
+
+        # ✅ Price filter (during loop)
         try:
             price = float(row.get("selling_price", 0))
             if "min_price" in filters and price < float(filters["min_price"]):
@@ -184,23 +189,30 @@ def retrieve_from_rag(query: str, filters: Dict, k: int = 20) -> List[Dict]:
                 continue
         except Exception:
             continue
+
         filtered.append(_format_result(row, score))
         if len(filtered) >= k:
             break
 
+    # ✅ Fallback: if no results, return top semantic matches
     if not filtered:
-        for idx, score in zip(indices[:k], scores[:k]):
-            filtered.append(_format_result(df.iloc[idx], score))
-        # Debugging and confirmation prints
+        print("[DEBUG] No strict matches found — returning top semantic results (may include out-of-range prices)")
+        fallback = [_format_result(df.iloc[idx], score) for idx, score in zip(indices[:k], scores[:k])]
+        # Fallback 也做一次价格过滤
+        if "max_price" in filters:
+            fallback = [f for f in fallback if f.get("price", 0) <= float(filters["max_price"])]
+        filtered = fallback
 
+    # ✅ Debug logs
     print(f"[DEBUG] Dataset found: {os.path.exists(DATA_PATH)} ({DATA_PATH})")
     print(f"[DEBUG] Retrieved {len(filtered)} items for query: '{query}' with filters: {filters}")
+
     if len(filtered) > 0:
         print(f"✅ Successfully retrieved {len(filtered)} results.")
     else:
         print("⚠️ No matching results found. Check filters or data content.")
 
-    # ✅ 强制过滤价格上限，防止超出 max_price 的结果混入
+    # ✅ Final strict price filter to guarantee correctness
     if "max_price" in filters:
         try:
             max_p = float(filters["max_price"])
@@ -212,6 +224,7 @@ def retrieve_from_rag(query: str, filters: Dict, k: int = 20) -> List[Dict]:
             print(f"[DEBUG] Skipped price filter due to error: {e}")
 
     return filtered
+
 
 
 
