@@ -6,6 +6,7 @@ langchain>=0.3.0
 langchain-openai>=0.2.0  # or langchain-anthropic, langchain-google-genai
 langchain-community>=0.3.0
 langchain-huggingface>=0.0.1
+chromadb==0.5.11
 
 ## MCP (Model Context Protocol)
 mcp>=0.9.0
@@ -45,3 +46,4 @@ pytest>=7.4.0
 black>=23.0.0
 ruff>=0.1.0
 
+transformers==4.43.4
