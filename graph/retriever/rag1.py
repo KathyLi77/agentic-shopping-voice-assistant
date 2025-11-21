@@ -192,14 +192,28 @@ def retrieve_from_rag(query: str, filters: Dict, k: int = 20) -> List[Dict]:
         for idx, score in zip(indices[:k], scores[:k]):
             filtered.append(_format_result(df.iloc[idx], score))
         # Debugging and confirmation prints
-    
+
     print(f"[DEBUG] Dataset found: {os.path.exists(DATA_PATH)} ({DATA_PATH})")
     print(f"[DEBUG] Retrieved {len(filtered)} items for query: '{query}' with filters: {filters}")
     if len(filtered) > 0:
         print(f"✅ Successfully retrieved {len(filtered)} results.")
     else:
         print("⚠️ No matching results found. Check filters or data content.")
+
+    # ✅ 强制过滤价格上限，防止超出 max_price 的结果混入
+    if "max_price" in filters:
+        try:
+            max_p = float(filters["max_price"])
+            before = len(filtered)
+            filtered = [f for f in filtered if f.get("price", 0) <= max_p]
+            after = len(filtered)
+            print(f"[DEBUG] Applied max_price filter {max_p}: reduced {before} → {after} results")
+        except Exception as e:
+            print(f"[DEBUG] Skipped price filter due to error: {e}")
+
     return filtered
+
+
 
     
 
