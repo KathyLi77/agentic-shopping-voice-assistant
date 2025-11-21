@@ -2,7 +2,7 @@
 from graph.state import GraphState
 from graph.router import get_router_chain
 from graph.planner import get_planner_chain
-from graph.retriever.rag import retrieve_from_rag
+from graph.retriever.rag1 import retrieve_from_rag
 from graph.retriever.web import retrieve_from_web
 from graph.answerer import get_answerer_chain
 import logging
