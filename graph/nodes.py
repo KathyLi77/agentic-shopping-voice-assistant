@@ -2,7 +2,7 @@
 from graph.state import GraphState
 from graph.router import get_router_chain
 from graph.planner import get_planner_chain
-from graph.retriever.rag1 import retrieve_from_rag
+from graph.retriever import retrieve_products
 from graph.retriever.web import retrieve_from_web
 from graph.answerer import get_answerer_chain
 import logging
@@ -107,8 +107,7 @@ def rag_retriever_node(state: GraphState) -> GraphState:
         logger.info(f"Retrieving from private database with filters: {filters}")
         
         # Retrieve documents
-        docs = retrieve_from_rag(query=query, filters=filters, k=5)
-        
+        docs = retrieve_products(query=query, filters=filters, k=5)
         # Update state
         state["retrieved_docs"] = docs
         
@@ -185,7 +184,7 @@ def hybrid_retriever_node(state: GraphState) -> GraphState:
         
         logger.info(f"[Hybrid Node] Retrieving from both RAG and Web")
         
-        rag_docs = retrieve_from_rag(query, filters, k=3)
+        rag_docs = retrieve_products(query, filters, k=3)
         web_docs = retrieve_from_web(query, filters, k=2)
         
         all_docs = rag_docs + web_docs
