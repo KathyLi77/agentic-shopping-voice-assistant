@@ -141,11 +141,13 @@ Return only valid JSON."""
         res = requests.post(GROQ_ENDPOINT, headers=headers, json=payload).json()
         print("[DEBUG] Groq API raw response:", res)
         text = res["choices"][0]["message"]["content"].strip()
-        print("[DEBUG] Parsed filters:", _safe_json_parse(text))
+        print("[DEBUG] Parsed filters:", _safe_json_parse(text))  # 👈 输出解析结果
         return _safe_json_parse(text)
+
     except Exception as e:
         logger.warning(f"[Groq] Filter extraction failed: {e}")
         return {}
+        
 
 
 def _safe_json_parse(text):
