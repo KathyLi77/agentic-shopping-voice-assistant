@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # ===============================
 # 🔹 Environment Setup
 # ===============================
-load_dotenv(dotenv_path=".env.local")
+load_dotenv(dotenv_path=".env.local", override=True)
 logger = logging.getLogger(__name__)
 
 _vector_store = None
@@ -115,6 +115,7 @@ def get_vector_store():
 def extract_filters_from_text(query: str) -> Dict:
     """Extract structured filters using user-provided Groq API key."""
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    print(f"[DEBUG] Loaded GROQ_API_KEY: {GROQ_API_KEY[:8]}******")
     if not GROQ_API_KEY:
         raise ValueError("❌ GROQ_API_KEY not set. Please call setup_env(GROQ_API_KEY=...) first.")
 
@@ -138,7 +139,9 @@ Return only valid JSON."""
     }
     try:
         res = requests.post(GROQ_ENDPOINT, headers=headers, json=payload).json()
+        print("[DEBUG] Groq API raw response:", res)
         text = res["choices"][0]["message"]["content"].strip()
+        print("[DEBUG] Parsed filters:", _safe_json_parse(text))
         return _safe_json_parse(text)
     except Exception as e:
         logger.warning(f"[Groq] Filter extraction failed: {e}")
